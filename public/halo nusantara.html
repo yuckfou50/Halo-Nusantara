@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Halo Nusantara - Chat Anonim</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- MAIN MENU SCREEN -->
+  <div id="mainMenu" class="screen">
+    <div class="main-container glass-effect">
+      <!-- Header dengan Logo/Icon -->
+      <div class="main-header">
+        <div class="logo-container">
+          <div class="logo-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h1 class="main-title">Halo Nusantara</h1>
+        </div>
+        <p class="main-subtitle">
+          <i class="fas fa-comment-dots"></i>
+          Web untuk berinteraksi tanpa harus bertemu langsung 😊
+        </p>
+      </div>
+
+      <!-- User Profile Section (updated with region & culture preview) -->
+      <div class="profile-section glass-effect">
+        <div class="profile-header">
+          <i class="fas fa-user-circle profile-icon"></i>
+          <div>
+            <h3>Identitas Anda</h3>
+            <p class="profile-subtitle" id="userRegionSubtitle">Pilih daerah asal untuk memulai</p>
+          </div>
+        </div>
+        
+        <div class="current-username">
+          <div class="username-display">
+            <i class="fas fa-tag"></i>
+            <span id="currentUsernameDisplay">Anonymous_User</span>
+          </div>
+          <button id="changeUsernameBtn" class="btn-change">
+            <i class="fas fa-edit"></i> Ganti Nama
+          </button>
+        </div>
+        
+        <div class="region-display">
+          <div class="region-info">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <strong>Daerah Asal:</strong>
+              <span id="userRegionDisplay">Belum dipilih</span>
+            </div>
+          </div>
+          <button id="changeRegionBtn" class="btn-change-small">
+            <i class="fas fa-exchange-alt"></i> Ubah
+          </button>
+        </div>
+
+        <div class="culture-progress-mini">
+          <div class="progress-info">
+            <i class="fas fa-trophy"></i>
+            <span><strong id="miniDiscoveredCount">0</strong>/38 Budaya ditemukan</span>
+          </div>
+          <button id="viewCultureBtn" class="btn-culture">
+            <i class="fas fa-eye"></i> Lihat
+          </button>
+        </div>
+      </div>
+
+      <!-- Menu Options -->
+      <div class="menu-options">
+        <button id="startChatBtn" class="btn-start">
+          <i class="fas fa-comments"></i>
+          <span>Mulai Chat</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+        
+        <div class="secondary-options">
+          <button id="howToUseBtn" class="btn-secondary">
+            <i class="fas fa-question-circle"></i> Cara Menggunakan
+          </button>
+          <button id="aboutBtn" class="btn-secondary">
+            <i class="fas fa-info-circle"></i> Tentang
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="main-footer">
+        <p><i class="fas fa-shield-alt"></i> 100% Anonim • <i class="fas fa-heart"></i> Budaya Nusantara</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GANTI USERNAME -->
+  <div id="usernameModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-user-edit"></i> Ganti Nama Pengguna</h2>
+        <button id="closeUsernameModal" class="modal-close">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Masukkan nama yang akan ditampilkan di chat:</p>
+        
+        <div class="username-input-group">
+          <div class="input-with-icon">
+            <i class="fas fa-user"></i>
+            <input 
+              id="newUsernameInput" 
+              type="text" 
+              placeholder="Contoh: Budi dari Jakarta"
+              maxlength="30"
+              autocomplete="off"
+            />
+          </div>
+          <div class="username-examples">
+            <p><i class="fas fa-lightbulb"></i> Contoh: <span class="example">Sari_Bali</span>, <span class="example">Rudi_Medan</span>, <span class="example">Nia_Surabaya</span></p>
+          </div>
+        </div>
+        
+        <div class="username-preview">
+          <p>Pratinjau:</p>
+          <div class="preview-bubble">
+            <span id="usernamePreview">Anonymous_User</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="cancelUsernameBtn" class="btn-cancel">
+          <i class="fas fa-times"></i> Batal
+        </button>
+        <button id="saveUsernameBtn" class="btn-save">
+          <i class="fas fa-check"></i> Simpan Nama
+        </button>
+      </div>
+      
+      <div id="usernameMsg" class="modal-message"></div>
+    </div>
+  </div>
+
+  <!-- MODAL CARA MENGGUNAKAN -->
+  <div id="howToModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-question-circle"></i> Cara Menggunakan</h2>
+        <button class="modal-close close-howto">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4><i class="fas fa-user-edit"></i> Atur Nama</h4>
+            <p>Ganti nama Anda terlebih dahulu agar dikenal di chat</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4><i class="fas fa-play-circle"></i> Mulai Chat</h4>
+            <p>Klik tombol "Mulai Chat" untuk masuk ke ruang obrolan</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4><i class="fas fa-comments"></i> Berinteraksi</h4>
+            <p>Kirim pesan dan berkenalan dengan sesama pengguna</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ok close-howto">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TENTANG -->
+  <div id="aboutModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-info-circle"></i> Tentang Halo Nusantara</h2>
+        <button class="modal-close close-about">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="about-content">
+          <div class="about-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <p><strong>Halo Nusantara</strong> adalah platform chat anonim yang bertujuan untuk:</p>
+          <ul>
+            <li><i class="fas fa-handshake"></i> Mempererat silaturahmi digital</li>
+            <li><i class="fas fa-globe-asia"></i> Melestarikan budaya perkenalan Nusantara</li>
+            <li><i class="fas fa-shield-alt"></i> Menyediakan ruang aman untuk berinteraksi</li>
+            <li><i class="fas fa-heart"></i> Membangun komunitas yang positif</li>
+          </ul>
+          <p class="about-note">
+            <i class="fas fa-exclamation-triangle"></i>
+            <em>Ingatlah untuk selalu menjaga sopan santun dalam berkomunikasi</em>
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ok close-about">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PILIH ASAL DAERAH -->
+  <div id="regionModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-map-marker-alt"></i> Pilih Asal Daerah Anda</h2>
+        <p>Pilih provinsi asal untuk memulai perjalanan budaya</p>
+      </div>
+      
+      <div class="modal-body">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+          <div class="search-region">
+            <div class="input-with-icon">
+              <i class="fas fa-search"></i>
+              <input 
+                id="regionSearch" 
+                type="text" 
+                placeholder="Cari provinsi..."
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          
+          <div class="region-grid" id="regionGrid">
+            <!-- Daerah akan diisi oleh JavaScript -->
+          </div>
+        </div>
+        
+        <div class="selected-region" id="selectedRegionInfo" style="display:none;">
+          <h4><i class="fas fa-check-circle"></i> Daerah Terpilih:</h4>
+          <div class="selected-card" id="selectedRegionCard"></div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="cancelRegionBtn" class="btn-cancel">
+          <i class="fas fa-times"></i> Nanti Saja
+        </button>
+        <button id="saveRegionBtn" class="btn-save" disabled>
+          <i class="fas fa-check"></i> Konfirmasi Daerah
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DISCOVERED CULTURE -->
+  <div id="cultureModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect culture-modal">
+      <div class="modal-header">
+        <h2><i class="fas fa-trophy"></i> Budaya yang Telah Ditemukan</h2>
+        <p>Jelajahi keragaman budaya Nusantara melalui pertemuan dengan orang dari berbagai daerah</p>
+        <button class="modal-close close-culture">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- LEFT COLUMN: Culture List -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+          <div class="culture-controls">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="discovered">
+                <i class="fas fa-check-circle"></i> Telah Ditemukan
+              </button>
+              <button class="tab-btn" data-tab="undiscovered">
+                <i class="fas fa-question-circle"></i> Belum Ditemukan
+              </button>
+              <button class="tab-btn" data-tab="all">
+                <i class="fas fa-globe-asia"></i> Semua Daerah
+              </button>
+            </div>
+            
+            <div class="filter-controls">
+              <div class="input-with-icon">
+                <i class="fas fa-search"></i>
+                <input 
+                  id="cultureSearch" 
+                  type="text" 
+                  placeholder="Cari daerah..."
+                  autocomplete="off"
+                />
+              </div>
+              <select id="islandFilter" class="filter-select">
+                <option value="">Semua Pulau</option>
+                <option value="Sumatera">Sumatera</option>
+                <option value="Jawa">Jawa</option>
+                <option value="Kalimantan">Kalimantan</option>
+                <option value="Sulawesi">Sulawesi</option>
+                <option value="Bali & Nusa Tenggara">Bali & Nusa Tenggara</option>
+                <option value="Maluku">Maluku</option>
+                <option value="Papua">Papua</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="culture-list-container">
+            <div class="culture-list" id="cultureList">
+              <!-- Daftar budaya akan diisi oleh JavaScript -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- RIGHT COLUMN: Stats Sidebar -->
+        <div class="culture-sidebar" id="cultureSidebarInfo" style="display:none;">
+          <h4><i class="fas fa-bar-chart"></i> Statistik Budaya</h4>
+          
+          <div class="culture-stats">
+            <div class="stat-box">
+              <div class="stat-icon">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="discoveredCount">0</h3>
+                <p>Daerah Ditemukan</p>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-icon">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="discoveryPercentage">0%</h3>
+                <p>Progress</p>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-icon">
+                <i class="fas fa-home"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="userRegion">-</h3>
+                <p>Daerah Asal Anda</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+              <span>0/38 Provinsi Ditemukan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-ok close-culture">
+          <i class="fas fa-check"></i> Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFIKASI DISCOVERY BARU -->
+  <div id="discoveryNotification" class="discovery-notification" style="display:none;">
+    <div class="notification-content">
+      <div class="notification-icon">
+        <i class="fas fa-star"></i>
+      </div>
+      <div class="notification-text">
+        <h4>Budaya Baru Ditemukan!</h4>
+        <p id="discoveryText">Anda telah bertemu dengan seseorang dari <strong id="discoveredRegion"></strong></p>
+      </div>
+      <button class="notification-close" id="closeNotification">&times;</button>
+    </div>
+  </div>
+
+  <!-- CAPTCHA SCREEN -->
+  <div id="captchaScreen" class="screen" style="display:none;">
+    <div class="card glass-effect">
+      <div class="captcha-header">
+        <button id="backToMenu" class="btn-back">
+          <i class="fas fa-arrow-left"></i> Kembali
+        </button>
+        <h1>Verifikasi Keamanan</h1>
+      </div>
+      
+      <p class="sub">
+        <i class="fas fa-shield-alt"></i>
+        Untuk menjaga keamanan, harap verifikasi diri Anda terlebih dahulu
+      </p>
+
+      <div id="captchaBox" class="glass-effect">
+        <span id="captchaText">------</span>
+        <button id="refreshCaptcha" class="miniBtn" type="button" title="Buat kode baru">
+          <i class="fas fa-redo"></i>
+        </button>
+      </div>
+
+      <div class="input-with-icon">
+        <i class="fas fa-key"></i>
+        <input 
+          id="captchaInput" 
+          type="text" 
+          placeholder="Masukkan kode di atas" 
+          autocomplete="off"
+        />
+      </div>
+      
+      <div class="row">
+        <button id="verifyCaptcha" class="btn-verify" type="button">
+          <i class="fas fa-check-circle"></i> Verifikasi & Masuk Chat
+        </button>
+      </div>
+      
+      <div id="captchaMsg" class="hint"></div>
+    </div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chatScreen" class="screen" style="display:none;">
+    <div class="chatWrap">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="left-section">
+          <div class="appTitle">
+            <i class="fas fa-comments"></i> Halo Nusantara
+          </div>
+          <div id="meLabel" class="meLabel">
+            <i class="fas fa-user"></i> Memuat identitas...
+          </div>
+        </div>
+        <div class="right-section">
+          <button id="viewCultureChatBtn" class="miniBtn" title="Budaya Ditemukan">
+            <i class="fas fa-trophy"></i>
+          </button>
+          <button id="changeNameBtn" class="miniBtn" title="Ganti nama">
+            <i class="fas fa-user-edit"></i>
+          </button>
+          <button id="backToMainFromChat" class="miniBtn" title="Kembali ke Menu">
+            <i class="fas fa-home"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- MODAL GANTI NAMA DI CHAT -->
+      <div id="nameChangeModal" class="modal" style="display:none;">
+        <div class="modal-content glass-effect">
+          <h2><i class="fas fa-user-edit"></i> Ganti Nama</h2>
+          <p>Masukkan nama baru untuk ditampilkan di chat:</p>
+          <input 
+            id="newNameInput" 
+            type="text" 
+            placeholder="Contoh: Budi dari Jakarta" 
+            maxlength="30"
+            autocomplete="off"
+          />
+          <div class="modal-buttons">
+            <button id="cancelNameBtn" class="btn-secondary">
+              <i class="fas fa-times"></i> Batal
+            </button>
+            <button id="saveNameBtn" class="btn-primary">
+              <i class="fas fa-check"></i> Simpan
+            </button>
+          </div>
+          <div id="nameChangeMsg" class="hint"></div>
+        </div>
+      </div>
+
+      <!-- AREA PESAN -->
+      <div id="messages" class="messages" aria-label="Daftar pesan"></div>
+
+      <!-- AREA INPUT PESAN -->
+      <div class="inputArea">
+        <div class="input-with-icon">
+          <i class="fas fa-paper-plane"></i>
+          <input 
+            id="messageInput" 
+            type="text" 
+            placeholder="Ketik pesan untuk menyapa sesama anak nusantara..." 
+            autocomplete="off"
+          />
+        </div>
+        <button id="sendBtn" class="btn-send" type="button">
+          <i class="fas fa-paper-plane"></i> Kirim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
