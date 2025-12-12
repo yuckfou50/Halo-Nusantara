@@ -43,18 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Chat elements
     chatScreen: document.getElementById('chatScreen'),
     backToMainFromChat: document.getElementById('backToMainFromChat'),
-    changeNameBtn: document.getElementById('changeNameBtn'),
     messageInput: document.getElementById('messageInput'),
     sendBtn: document.getElementById('sendBtn'),
     messages: document.getElementById('messages'),
     meLabel: document.getElementById('meLabel'),
-
-    // Name change modal elements
-    nameChangeModal: document.getElementById('nameChangeModal'),
-    newNameInput: document.getElementById('newNameInput'),
-    cancelNameBtn: document.getElementById('cancelNameBtn'),
-    saveNameBtn: document.getElementById('saveNameBtn'),
-    nameChangeMsg: document.getElementById('nameChangeMsg')
   };
 
   // Check if all elements exist
@@ -551,19 +543,6 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.aboutModal.style.display = 'none';
   }
 
-  function showNameChangeModal() {
-    elements.newNameInput.value = userData.username;
-    elements.nameChangeModal.style.display = 'flex';
-    elements.newNameInput.focus();
-    elements.nameChangeMsg.textContent = '';
-  }
-
-  function hideNameChangeModal() {
-    elements.nameChangeModal.style.display = 'none';
-    elements.newNameInput.value = '';
-    elements.nameChangeMsg.textContent = '';
-  }
-
   // ===================
   // USERNAME CHANGE FUNCTIONS
   // ===================
@@ -595,49 +574,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show success message
     elements.usernameMsg.textContent = 'Nama berhasil diubah!';
     elements.usernameMsg.style.color = 'var(--secondary)';
-
-    console.log(`Username changed: ${oldName} -> ${userData.username}`);
-  }
-
-  function changeUserNameInChat(newName) {
-    const trimmedName = newName.trim();
-
-    if (!trimmedName) {
-      elements.nameChangeMsg.textContent = 'Nama tidak boleh kosong!';
-      elements.nameChangeMsg.style.color = 'var(--danger)';
-      return;
-    }
-
-    if (trimmedName.length > 30) {
-      elements.nameChangeMsg.textContent = 'Maksimal 30 karakter!';
-      elements.nameChangeMsg.style.color = 'var(--danger)';
-      return;
-    }
-
-    const oldName = userData.username;
-    userData.username = trimmedName;
-
-    // Update UI
-    updateUserLabel();
-
-    // Add system message
-    addSystemMessage(`Anda sekarang dikenal sebagai ${userData.username}`);
-
-    // Notify server if socket exists
-    if (socket) {
-      socket.emit('user name changed', {
-        userId: userData.userId,
-        oldName: oldName,
-        newName: userData.username
-      });
-    }
-
-    // Close modal
-    hideNameChangeModal();
-
-    // Show success message
-    elements.nameChangeMsg.textContent = 'Nama berhasil diubah!';
-    elements.nameChangeMsg.style.color = 'var(--secondary)';
 
     console.log(`Username changed: ${oldName} -> ${userData.username}`);
   }
@@ -807,11 +743,6 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.messages.innerHTML = '';
   });
 
-  elements.changeNameBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showNameChangeModal();
-  });
-
   elements.sendBtn?.addEventListener('click', (e) => {
     e.preventDefault();
     sendMessage();
@@ -821,32 +752,556 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') sendMessage();
   });
 
-  // Name change modal events
-  elements.cancelNameBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    hideNameChangeModal();
-  });
-
-  elements.saveNameBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    changeUserNameInChat(elements.newNameInput.value);
-  });
-
-  elements.newNameInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') elements.saveNameBtn.click();
-  });
-
   // Close modals when clicking outside
-  [elements.usernameModal, elements.howToModal, elements.aboutModal, elements.nameChangeModal].forEach(modal => {
+  [elements.usernameModal, elements.howToModal, elements.aboutModal].forEach(modal => {
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
         if (modal === elements.usernameModal) hideUsernameModal();
         else if (modal === elements.howToModal) hideHowToModal();
         else if (modal === elements.aboutModal) hideAboutModal();
-        else if (modal === elements.nameChangeModal) hideNameChangeModal();
       }
     });
   });
+
+  // ===================
+  // PARTNER STATUS VARIABLES
+  // ===================
+  let partnerStatus = {
+    isOnline: false,
+    isTyping: false,
+    lastActivity: null,
+    messageCount: 0,
+    chatStartTime: null,
+    lastResponseTime: null,
+    connectionQuality: 3,
+    partnerNotes: {}
+  };
+
+  let chatTimer = null;
+
+  // ===================
+  // PARTNER STATUS FUNCTIONS
+  // ===================
+
+  function showPartnerStatusBar(partner) {
+    const statusBar = document.getElementById('partnerStatusBar');
+    const partnerName = document.getElementById('currentPartnerName');
+    const partnerLocation = document.getElementById('partnerLocation');
+    
+    if (statusBar && partner) {
+      partnerName.textContent = partner.username || 'Anonymous';
+      partnerLocation.textContent = partner.region || 'Indonesia';
+      statusBar.style.display = 'block';
+      startChatTimer();
+      
+      partnerStatus = {
+        isOnline: true,
+        isTyping: false,
+        lastActivity: new Date(),
+        messageCount: 0,
+        chatStartTime: new Date(),
+        lastResponseTime: null,
+        connectionQuality: getRandomConnectionQuality(),
+        partnerNotes: JSON.parse(localStorage.getItem(`partner_notes_${partner.id}`)) || {}
+      };
+      
+      updatePartnerStatusUI();
+      console.log(`Partner status bar shown for: ${partner.username}`);
+    }
+  }
+
+  function hidePartnerStatusBar() {
+    const statusBar = document.getElementById('partnerStatusBar');
+    if (statusBar) {
+      statusBar.style.display = 'none';
+    }
+    stopChatTimer();
+  }
+
+  function updatePartnerStatusUI() {
+    const statusIndicator = document.getElementById('partnerStatusIndicator');
+    const typingStatus = document.getElementById('typingStatus');
+    const lastSeenStatus = document.getElementById('lastSeenStatus');
+    const messageCount = document.getElementById('messageCount');
+    const chatDuration = document.getElementById('chatDuration');
+    
+    if (!statusIndicator) return;
+    
+    if (partnerStatus.isTyping) {
+      statusIndicator.className = 'status-indicator typing';
+      statusIndicator.innerHTML = '<i class="fas fa-circle"></i> Mengetik...';
+    } else if (partnerStatus.isOnline) {
+      statusIndicator.className = 'status-indicator online';
+      statusIndicator.innerHTML = '<i class="fas fa-circle"></i> Online';
+    } else {
+      statusIndicator.className = 'status-indicator offline';
+      statusIndicator.innerHTML = '<i class="fas fa-circle"></i> Offline';
+    }
+    
+    if (typingStatus) {
+      typingStatus.style.display = partnerStatus.isTyping ? 'flex' : 'none';
+    }
+    
+    if (lastSeenStatus && partnerStatus.lastActivity) {
+      const lastSeenText = getLastSeenText(partnerStatus.lastActivity);
+      lastSeenStatus.querySelector('span').textContent = lastSeenText;
+    }
+    
+    if (messageCount) {
+      messageCount.querySelector('span').textContent = `${partnerStatus.messageCount} pesan`;
+    }
+    
+    if (chatDuration && partnerStatus.chatStartTime) {
+      const durationText = getChatDurationText(partnerStatus.chatStartTime);
+      chatDuration.textContent = durationText;
+    }
+  }
+
+  function partnerStartedTyping() {
+    if (!partnerStatus.isTyping) {
+      partnerStatus.isTyping = true;
+      partnerStatus.lastActivity = new Date();
+      updatePartnerStatusUI();
+      
+      const indicator = document.getElementById('partnerStatusIndicator');
+      if (indicator) {
+        indicator.classList.add('status-change');
+        setTimeout(() => indicator.classList.remove('status-change'), 500);
+      }
+    }
+  }
+
+  function partnerStoppedTyping() {
+    if (partnerStatus.isTyping) {
+      partnerStatus.isTyping = false;
+      partnerStatus.lastActivity = new Date();
+      updatePartnerStatusUI();
+    }
+  }
+
+  function partnerSentMessage() {
+    partnerStatus.messageCount++;
+    partnerStatus.lastResponseTime = new Date();
+    partnerStatus.lastActivity = new Date();
+    partnerStatus.isTyping = false;
+    updatePartnerStatusUI();
+    updateConnectionQuality();
+  }
+
+  function getLastSeenText(lastActivity) {
+    if (!lastActivity) return 'Tidak diketahui';
+    
+    const now = new Date();
+    const diffMs = now - lastActivity;
+    const diffSec = Math.floor(diffMs / 1000);
+    
+    if (diffSec < 10) return 'Baru saja';
+    if (diffSec < 60) return `${diffSec} detik lalu`;
+    
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin} menit lalu`;
+    
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour} jam lalu`;
+    
+    return 'Lebih dari 1 hari';
+  }
+
+  function getChatDurationText(startTime) {
+    if (!startTime) return 'Baru mulai';
+    
+    const now = new Date();
+    const diffMs = now - startTime;
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMin < 1) return 'Baru mulai';
+    if (diffMin < 60) return `${diffMin} menit`;
+    
+    const diffHour = Math.floor(diffMin / 60);
+    return `${diffHour} jam ${diffMin % 60} menit`;
+  }
+
+  function startChatTimer() {
+    if (chatTimer) clearInterval(chatTimer);
+    chatTimer = setInterval(() => {
+      updatePartnerStatusUI();
+    }, 30000);
+  }
+
+  function stopChatTimer() {
+    if (chatTimer) {
+      clearInterval(chatTimer);
+      chatTimer = null;
+    }
+  }
+
+  function updateConnectionQuality() {
+    const change = Math.random();
+    if (change < 0.3) {
+      partnerStatus.connectionQuality = Math.min(4, partnerStatus.connectionQuality + 1);
+    } else if (change < 0.4) {
+      partnerStatus.connectionQuality = Math.max(1, partnerStatus.connectionQuality - 1);
+    }
+    updateConnectionQualityUI();
+  }
+
+  function getRandomConnectionQuality() {
+    return Math.floor(Math.random() * 4) + 1;
+  }
+
+  function updateConnectionQualityUI() {
+    const bars = document.querySelectorAll('.quality-bar');
+    if (!bars.length) return;
+    
+    bars.forEach((bar, index) => {
+      if (index < partnerStatus.connectionQuality) {
+        bar.classList.add('active');
+      } else {
+        bar.classList.remove('active');
+      }
+    });
+    
+    const connectionText = document.getElementById('connectionText');
+    if (connectionText) {
+      const texts = ['Koneksi Buruk', 'Koneksi Cukup', 'Koneksi Baik', 'Koneksi Sangat Baik'];
+      connectionText.textContent = texts[partnerStatus.connectionQuality - 1] || 'Koneksi Baik';
+    }
+  }
+
+  function showPartnerInfoModal() {
+    if (!currentPartner) return;
+    
+    const modal = document.getElementById('partnerInfoModal');
+    const partnerName = document.getElementById('modalPartnerName');
+    const messageCount = document.getElementById('modalMessageCount');
+    const chatDuration = document.getElementById('modalChatDuration');
+    const responseTime = document.getElementById('modalResponseTime');
+    const partnerNotes = document.getElementById('partnerNotes');
+    
+    if (modal && partnerName) {
+      partnerName.textContent = currentPartner.username || 'Anonymous';
+      messageCount.textContent = partnerStatus.messageCount;
+      
+      if (partnerStatus.chatStartTime) {
+        const durationMin = Math.floor((new Date() - partnerStatus.chatStartTime) / (1000 * 60));
+        chatDuration.textContent = `${durationMin}m`;
+      }
+      
+      if (partnerStatus.lastResponseTime && partnerStatus.messageCount > 0) {
+        const avgResponse = Math.floor((new Date() - partnerStatus.chatStartTime) / (partnerStatus.messageCount * 1000));
+        responseTime.textContent = `${avgResponse}s`;
+      }
+      
+      if (partnerNotes) {
+        partnerNotes.value = partnerStatus.partnerNotes.notes || '';
+      }
+      
+      updateConnectionQualityUI();
+      modal.style.display = 'flex';
+    }
+  }
+
+  function savePartnerNotes() {
+    if (!currentPartner) return;
+    
+    const notesTextarea = document.getElementById('partnerNotes');
+    if (notesTextarea) {
+      partnerStatus.partnerNotes.notes = notesTextarea.value;
+      partnerStatus.partnerNotes.updatedAt = new Date();
+      localStorage.setItem(`partner_notes_${currentPartner.id}`, JSON.stringify(partnerStatus.partnerNotes));
+      console.log('Partner notes saved');
+    }
+  }
+
+  // ===================
+  // NEXT CHAT VARIABLES
+  // ===================
+  let currentPartner = null;
+  let chatRoom = null;
+  let onlineUsersList = [];
+  let searchTimeout = null;
+
+  // ===================
+  // NEXT CHAT FUNCTIONS
+  // ===================
+
+  function showFindPartnerModal() {
+    const modal = document.getElementById('findPartnerModal');
+    const searchingDiv = document.getElementById('searchingPartner');
+    const foundDiv = document.getElementById('partnerFound');
+    const noPartnerDiv = document.getElementById('noPartnerFound');
+    
+    searchingDiv.style.display = 'block';
+    foundDiv.style.display = 'none';
+    noPartnerDiv.style.display = 'none';
+    
+    modal.style.display = 'flex';
+    startPartnerSearch();
+  }
+
+  function startPartnerSearch() {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    updateOnlineCount();
+    
+    searchTimeout = setTimeout(() => {
+      const availablePartners = onlineUsersList.filter(user => 
+        user.id !== userData.userId && 
+        user.id !== currentPartner?.id
+      );
+      
+      if (availablePartners.length > 0) {
+        const randomPartner = availablePartners[Math.floor(Math.random() * availablePartners.length)];
+        showPartnerFound(randomPartner);
+      } else {
+        showNoPartnerFound();
+      }
+    }, 2000 + Math.random() * 2000);
+  }
+
+  function showPartnerFound(partner) {
+    const searchingDiv = document.getElementById('searchingPartner');
+    const foundDiv = document.getElementById('partnerFound');
+    
+    searchingDiv.style.display = 'none';
+    foundDiv.style.display = 'block';
+    
+    document.getElementById('partnerName').textContent = partner.username;
+    document.getElementById('partnerBio').textContent = getRandomBio();
+    document.getElementById('partnerRegion').textContent = partner.region || 'Indonesia';
+    document.getElementById('partnerStatus').textContent = 'Online Sekarang';
+    
+    currentPartner = partner;
+    
+    chatRoom = {
+      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      user1: userData.userId,
+      user2: partner.id,
+      createdAt: new Date(),
+      messageCount: 0
+    };
+  }
+
+  function showNoPartnerFound() {
+    const searchingDiv = document.getElementById('searchingPartner');
+    const noPartnerDiv = document.getElementById('noPartnerFound');
+    
+    searchingDiv.style.display = 'none';
+    noPartnerDiv.style.display = 'block';
+  }
+
+  function updateOnlineCount() {
+    const count = onlineUsersList.length - 1;
+    document.getElementById('onlineUsersCount').textContent = count > 0 ? count : 0;
+  }
+
+  function getRandomBio() {
+    const bios = [
+      'Sedang mencari teman berbincang',
+      'Suka belajar budaya daerah baru',
+      'Penggemar kopi dan cerita',
+      'Ingin kenal teman dari seluruh Indonesia',
+      'Pecinta kuliner nusantara',
+      'Senang bertukar cerita budaya',
+      'Traveler dalam jaringan'
+    ];
+    return bios[Math.floor(Math.random() * bios.length)];
+  }
+
+  function switchToNewPartner() {
+    if (!currentPartner) return;
+    
+    elements.messages.innerHTML = '';
+    showPartnerStatusBar(currentPartner);
+    addSystemMessage(`Anda sekarang terhubung dengan ${currentPartner.username}`);
+    addSystemMessage('Mulailah percakapan dengan menyapa!');
+    hideFindPartnerModal();
+    console.log(`Switched to new partner: ${currentPartner.username}`);
+  }
+
+  function addChatRoomInfo() {
+    const roomInfo = document.createElement('div');
+    roomInfo.className = 'chat-room-info';
+    roomInfo.innerHTML = `
+      <div class="room-icon">
+        <i class="fas fa-user-friends"></i>
+      </div>
+      <div class="room-details">
+        <h4>Chat dengan ${currentPartner?.username || 'Anonymous'}</h4>
+        <p>Room ID: ${chatRoom?.id?.substr(0, 8) || 'Random'}</p>
+      </div>
+    `;
+    
+    elements.messages.insertBefore(roomInfo, elements.messages.firstChild);
+  }
+
+  function hideFindPartnerModal() {
+    document.getElementById('findPartnerModal').style.display = 'none';
+    if (searchTimeout) clearTimeout(searchTimeout);
+  }
+
+  function disconnectFromPartner() {
+    if (currentPartner) {
+      savePartnerNotes();
+      addSystemMessage(`Anda telah meninggalkan chat dengan ${currentPartner.username}`);
+      hidePartnerStatusBar();
+      
+      currentPartner = null;
+      chatRoom = null;
+      partnerStatus = {
+        isOnline: false,
+        isTyping: false,
+        lastActivity: null,
+        messageCount: 0,
+        chatStartTime: null,
+        lastResponseTime: null,
+        connectionQuality: 3,
+        partnerNotes: {}
+      };
+      
+      const messages = elements.messages.querySelectorAll('.message:not(.system)');
+      messages.forEach(msg => msg.remove());
+      
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-chat-state';
+      emptyState.innerHTML = `
+        <i class="fas fa-comments"></i>
+        <h3>Tidak Ada Chat Aktif</h3>
+        <p>Klik tombol "Ganti Partner" untuk mulai ngobrol dengan orang baru</p>
+      `;
+      
+      elements.messages.appendChild(emptyState);
+    }
+  }
+
+  // ===================
+  // UPDATE SOCKET HANDLERS FOR ONLINE USERS
+  // ===================
+
+  function updateSocketHandlers() {
+    if (!socket) return;
+    
+    socket.on('online users', (users) => {
+      onlineUsersList = users;
+      updateOnlineCount();
+    });
+    
+    socket.on('user joined', (data) => {
+      addSystemMessage(data.message);
+      onlineUsersList.push({
+        id: data.userId || 'unknown',
+        username: data.username,
+        region: data.region
+      });
+      updateOnlineCount();
+    });
+    
+    socket.on('user left', (data) => {
+      addSystemMessage(data.message);
+      onlineUsersList = onlineUsersList.filter(user => user.username !== data.username);
+      updateOnlineCount();
+      
+      if (currentPartner && currentPartner.username === data.username) {
+        addSystemMessage(`Partner Anda (${data.username}) telah keluar`);
+        currentPartner = null;
+        chatRoom = null;
+      }
+    });
+  }
+
+  // ===================
+  // NEXT CHAT EVENT LISTENERS
+  // ===================
+
+  function addPartnerStatusEventListeners() {
+    const partnerInfoBtn = document.getElementById('partnerInfoBtn');
+    if (partnerInfoBtn) {
+      partnerInfoBtn.addEventListener('click', showPartnerInfoModal);
+    }
+    
+    const leaveChatBtn = document.getElementById('leaveChatBtn');
+    if (leaveChatBtn) {
+      leaveChatBtn.addEventListener('click', disconnectFromPartner);
+    }
+    
+    document.querySelectorAll('.close-partner-info').forEach(btn => {
+      btn.addEventListener('click', () => {
+        savePartnerNotes();
+        document.getElementById('partnerInfoModal').style.display = 'none';
+      });
+    });
+    
+    const notesTextarea = document.getElementById('partnerNotes');
+    if (notesTextarea) {
+      notesTextarea.addEventListener('blur', savePartnerNotes);
+      notesTextarea.addEventListener('keyup', (e) => {
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          savePartnerNotes();
+        }
+      });
+    }
+    
+    if (socket) {
+      socket.on('user typing', (data) => {
+        if (currentPartner && data.userId === currentPartner.id) {
+          partnerStartedTyping();
+        }
+      });
+      
+      socket.on('user stop typing', (data) => {
+        if (currentPartner && data.userId === currentPartner.id) {
+          partnerStoppedTyping();
+        }
+      });
+      
+      socket.on('chat message', (data) => {
+        if (currentPartner && data.senderId === currentPartner.id) {
+          partnerSentMessage();
+        }
+      });
+      
+      socket.on('user left', (data) => {
+        if (currentPartner && currentPartner.userId === data.userId) {
+          partnerStatus.isOnline = false;
+          partnerStatus.lastActivity = new Date();
+          updatePartnerStatusUI();
+          addSystemMessage(`Partner Anda (${data.username}) telah keluar`);
+          
+          setTimeout(() => {
+            if (!partnerStatus.isOnline) {
+              disconnectFromPartner();
+            }
+          }, 30000);
+        }
+      });
+    }
+  }
+
+  function addNextChatEventListeners() {
+    const nextChatBtn = document.getElementById('nextChatBtn');
+    if (nextChatBtn) {
+      nextChatBtn.addEventListener('click', showFindPartnerModal);
+    }
+    
+    document.querySelectorAll('.close-find-partner').forEach(btn => {
+      btn.addEventListener('click', hideFindPartnerModal);
+    });
+    
+    const startChatBtn = document.getElementById('startChatBtn');
+    if (startChatBtn) {
+      startChatBtn.addEventListener('click', switchToNewPartner);
+    }
+    
+    const nextPartnerBtn = document.getElementById('nextPartnerBtn');
+    if (nextPartnerBtn) {
+      nextPartnerBtn.addEventListener('click', startPartnerSearch);
+    }
+    
+    const tryAgainBtn = document.getElementById('tryAgainBtn');
+    if (tryAgainBtn) {
+      tryAgainBtn.addEventListener('click', startPartnerSearch);
+    }
+  }
 
   // ===================
   // INITIAL SETUP
@@ -858,6 +1313,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize discovery / culture system
   initDiscoveredRegions();
   setupCultureListeners();
+  
+  // Add Next Chat event listeners
+  addNextChatEventListeners();
+  
+  // Add Partner Status event listeners
+  addPartnerStatusEventListeners();
+  
+  // Update socket handlers for online users
+  updateSocketHandlers();
 
   // Add CSS for system messages
   const style = document.createElement('style');
