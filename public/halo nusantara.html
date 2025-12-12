@@ -428,42 +428,118 @@
           </div>
           <div id="meLabel" class="meLabel">
             <i class="fas fa-user"></i> Memuat identitas...
+          </div>          
+          <!-- STATUS PARTNER BARU -->
+          <div id="partnerStatusBar" class="partner-status-bar" style="display:none;">
+            <div class="partner-status-content">
+              <div class="partner-avatar-small">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="partner-info">
+                <div class="partner-name-status">
+                  <span id="currentPartnerName">Anonymous</span>
+                  <span class="status-indicator online" id="partnerStatusIndicator">
+                    <i class="fas fa-circle"></i> Online
+                  </span>
+                </div>
+                <div class="partner-details">
+                  <span class="partner-detail-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="partnerLocation">Indonesia</span>
+                  </span>
+                  <span class="partner-detail-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="chatDuration">Baru mulai</span>
+                  </span>
+                </div>
+              </div>
+              <div class="partner-actions">
+                <button class="miniBtn action-btn" title="Info Partner" id="partnerInfoBtn">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="miniBtn action-btn danger" title="Keluar dari Chat" id="leaveChatBtn">
+                  <i class="fas fa-sign-out-alt"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Chat Activity Status -->
+            <div class="chat-activity">
+              <div class="activity-item" id="typingStatus" style="display:none;">
+                <i class="fas fa-pencil-alt"></i>
+                <span>Sedang mengetik...</span>
+              </div>
+              <div class="activity-item" id="lastSeenStatus">
+                <i class="fas fa-eye"></i>
+                <span>Aktif beberapa detik lalu</span>
+              </div>
+              <div class="activity-item" id="messageCount">
+                <i class="fas fa-comment"></i>
+                <span>0 pesan</span>
+              </div>
+            </div>
+          </div>          
+          <!-- STATUS PARTNER BARU -->
+          <div id="partnerStatusBar" class="partner-status-bar" style="display:none;">
+            <div class="partner-status-content">
+              <div class="partner-avatar-small">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="partner-info">
+                <div class="partner-name-status">
+                  <span id="currentPartnerName">Anonymous</span>
+                  <span class="status-indicator online" id="partnerStatusIndicator">
+                    <i class="fas fa-circle"></i> Online
+                  </span>
+                </div>
+                <div class="partner-details">
+                  <span class="partner-detail-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="partnerLocation">Indonesia</span>
+                  </span>
+                  <span class="partner-detail-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="chatDuration">Baru mulai</span>
+                  </span>
+                </div>
+              </div>
+              <div class="partner-actions">
+                <button class="miniBtn action-btn" title="Info Partner" id="partnerInfoBtn">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="miniBtn action-btn danger" title="Keluar dari Chat" id="leaveChatBtn">
+                  <i class="fas fa-sign-out-alt"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Chat Activity Status -->
+            <div class="chat-activity">
+              <div class="activity-item" id="typingStatus" style="display:none;">
+                <i class="fas fa-pencil-alt"></i>
+                <span>Sedang mengetik...</span>
+              </div>
+              <div class="activity-item" id="lastSeenStatus">
+                <i class="fas fa-eye"></i>
+                <span>Aktif beberapa detik lalu</span>
+              </div>
+              <div class="activity-item" id="messageCount">
+                <i class="fas fa-comment"></i>
+                <span>0 pesan</span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="right-section">
+          <button id="nextChatBtn" class="miniBtn next-btn" title="Ganti Partner Chat">
+            <i class="fas fa-user-friends"></i>
+          </button>
           <button id="viewCultureChatBtn" class="miniBtn" title="Budaya Ditemukan">
             <i class="fas fa-trophy"></i>
-          </button>
-          <button id="changeNameBtn" class="miniBtn" title="Ganti nama">
-            <i class="fas fa-user-edit"></i>
           </button>
           <button id="backToMainFromChat" class="miniBtn" title="Kembali ke Menu">
             <i class="fas fa-home"></i>
           </button>
-        </div>
-      </div>
-
-      <!-- MODAL GANTI NAMA DI CHAT -->
-      <div id="nameChangeModal" class="modal" style="display:none;">
-        <div class="modal-content glass-effect">
-          <h2><i class="fas fa-user-edit"></i> Ganti Nama</h2>
-          <p>Masukkan nama baru untuk ditampilkan di chat:</p>
-          <input 
-            id="newNameInput" 
-            type="text" 
-            placeholder="Contoh: Budi dari Jakarta" 
-            maxlength="30"
-            autocomplete="off"
-          />
-          <div class="modal-buttons">
-            <button id="cancelNameBtn" class="btn-secondary">
-              <i class="fas fa-times"></i> Batal
-            </button>
-            <button id="saveNameBtn" class="btn-primary">
-              <i class="fas fa-check"></i> Simpan
-            </button>
-          </div>
-          <div id="nameChangeMsg" class="hint"></div>
         </div>
       </div>
 
@@ -483,6 +559,144 @@
         </div>
         <button id="sendBtn" class="btn-send" type="button">
           <i class="fas fa-paper-plane"></i> Kirim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NEXT CHAT / CARI PARTNER BARU -->
+  <div id="findPartnerModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-user-friends"></i> Cari Partner Chat Baru</h2>
+        <button class="modal-close close-find-partner">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div id="searchingPartner" class="partner-search-container">
+          <div class="searching-animation">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3>Mencari partner chat...</h3>
+          <p>Kami sedang mencari orang yang cocok untuk Anda</p>
+          
+          <div class="searching-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          
+          <div class="online-count">
+            <i class="fas fa-users"></i>
+            <span id="onlineUsersCount">0</span> orang online
+          </div>
+        </div>
+        
+        <div id="partnerFound" style="display:none;">
+          <div class="partner-found">
+            <div class="partner-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <h3 id="partnerName">Anonymous_User</h3>
+            <p id="partnerBio">Sedang mencari teman berbincang</p>
+            
+            <div class="partner-stats">
+              <div class="stat-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="partnerRegion">Indonesia</span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-clock"></i>
+                <span id="partnerStatus">Online</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button id="startChatBtn" class="btn-action btn-stay">
+              <i class="fas fa-comments"></i> Mulai Ngobrol
+            </button>
+            <button id="nextPartnerBtn" class="btn-action btn-next">
+              <i class="fas fa-redo"></i> Cari Lagi
+            </button>
+          </div>
+        </div>
+        
+        <div id="noPartnerFound" style="display:none;" class="empty-chat-state">
+          <i class="fas fa-user-slash"></i>
+          <h3>Tidak Ada Partner Tersedia</h3>
+          <p>Saat ini tidak ada orang lain yang sedang mencari partner chat</p>
+          <button id="tryAgainBtn" class="btn-action btn-stay">
+            <i class="fas fa-redo"></i> Coba Lagi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL INFO PARTNER -->
+  <div id="partnerInfoModal" class="modal" style="display:none;">
+    <div class="modal-content glass-effect">
+      <div class="modal-header">
+        <h2><i class="fas fa-user-circle"></i> Info Partner</h2>
+        <button class="modal-close close-partner-info">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="partner-profile">
+          <div class="profile-avatar-large">
+            <i class="fas fa-user"></i>
+          </div>
+          <h2 id="modalPartnerName">Anonymous</h2>
+          <p class="partner-bio" id="modalPartnerBio">Pengguna Halo Nusantara</p>
+          
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <span class="stat-value" id="modalMessageCount">0</span>
+              <span class="stat-label">Pesan</span>
+            </div>
+            <div class="profile-stat">
+              <span class="stat-value" id="modalChatDuration">0m</span>
+              <span class="stat-label">Durasi</span>
+            </div>
+            <div class="profile-stat">
+              <span class="stat-value" id="modalResponseTime">0s</span>
+              <span class="stat-label">Respon</span>
+            </div>
+          </div>
+          
+          <div class="connection-quality">
+            <div class="quality-bars" id="connectionBars">
+              <div class="quality-bar"></div>
+              <div class="quality-bar"></div>
+              <div class="quality-bar"></div>
+              <div class="quality-bar"></div>
+            </div>
+            <div class="quality-text">
+              <span id="connectionText">Koneksi Baik</span>
+            </div>
+          </div>
+          
+          <div class="profile-tags" id="partnerTags">
+            <span class="profile-tag">Pengguna Baru</span>
+            <span class="profile-tag">Aktif</span>
+          </div>
+        </div>
+        
+        <div class="partner-notes">
+          <h4><i class="fas fa-sticky-note"></i> Catatan Chat</h4>
+          <textarea 
+            id="partnerNotes" 
+            placeholder="Tambahkan catatan tentang partner ini..."
+            rows="3"
+          ></textarea>
+          <p class="note-hint"><i class="fas fa-info-circle"></i> Catatan ini hanya tersimpan di perangkat Anda</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-action btn-stay close-partner-info">
+          <i class="fas fa-check"></i> Tutup
         </button>
       </div>
     </div>
