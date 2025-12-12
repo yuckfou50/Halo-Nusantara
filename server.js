@@ -40,19 +40,27 @@ io.on('connection', (socket) => {
     onlineUsers.set(socket.id, {
       id: socket.id,
       username: userData.username,
-      region: userData.region || 'Unknown'
+      region: userData.region || 'Unknown',
+      joinedAt: new Date()
     });
     
     console.log(`👤 User login: ${userData.username} (${socket.id})`);
     
-    // Broadcast ke semua user bahwa ada user baru
+    // Broadcast dengan userId
     socket.broadcast.emit('user joined', {
+      userId: socket.id,
       username: userData.username,
-      message: `${userData.username} telah bergabung`
+      message: `${userData.username} telah bergabung`,
+      region: userData.region || 'Unknown'
     });
     
     // Update semua user dengan daftar online terbaru
     io.emit('online users', Array.from(onlineUsers.values()));
+  });
+  
+  // Get online users on demand
+  socket.on('get online users', () => {
+    socket.emit('online users', Array.from(onlineUsers.values()));
   });
   
   // User mengirim pesan
@@ -122,13 +130,12 @@ io.on('connection', (socket) => {
     if (user) {
       onlineUsers.delete(socket.id);
       
-      // Broadcast ke semua user
       socket.broadcast.emit('user left', {
+        userId: socket.id,
         username: user.username,
         message: `${user.username} telah keluar`
       });
       
-      // Update daftar online
       io.emit('online users', Array.from(onlineUsers.values()));
       
       console.log(`👋 User disconnected: ${user.username} (${socket.id})`);
